@@ -1,0 +1,6 @@
+{
+  "root_path": ".",
+  "work_dir_name": "wdir",
+  "printer_bin": "echo",
+  "printer_args": ["hello world"]
+}
