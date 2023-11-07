@@ -7,7 +7,7 @@ pub enum FileSupported {
     YAML,
 }
 
-use log::{info, warn};
+use log::{info, warn, error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -40,21 +40,21 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
-    pub fn generate_config_file() {
-        let default_config = AppConfig::default();
+    // pub fn generate_config_file() {
+    //     let default_config = AppConfig::default();
 
-        let yaml_string = serde_yaml::to_string(&default_config).unwrap();
-        let json_string = serde_json::to_string_pretty(&default_config).unwrap();
-        let filename = default_config.config_file_name;
+    //     let yaml_string = serde_yaml::to_string(&default_config).unwrap();
+    //     let json_string = serde_json::to_string_pretty(&default_config).unwrap();
+    //     let filename = default_config.config_file_name;
 
-        if let Err(e) = std::fs::write(format!("{}.yaml", filename), yaml_string) {
-            log::error!("Erro ao gerar yaml config: {}", e);
-        }
+    //     if let Err(e) = std::fs::write(format!("{}.yaml", filename), yaml_string) {
+    //         log::error!("Erro ao gerar yaml config: {}", e);
+    //     }
 
-        if let Err(e) = std::fs::write(format!("{}.json", filename), json_string) {
-            log::error!("Erro ao gerar json config: {}", e);
-        }
-    }
+    //     if let Err(e) = std::fs::write(format!("{}.json", filename), json_string) {
+    //         log::error!("Erro ao gerar json config: {}", e);
+    //     }
+    // }
 
     pub fn from_config_file() -> AppConfig {
         let default_config = AppConfig::default();
@@ -76,7 +76,8 @@ impl AppConfig {
             let read_file_result = std::fs::read_to_string(file_path);
             let string_input = match read_file_result {
                 Err(e) => {
-                    continue;
+                    error!("{}", e);
+                    panic!();
                 }
                 Ok(x) => x,
             };
