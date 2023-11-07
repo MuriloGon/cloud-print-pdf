@@ -52,10 +52,23 @@ fn init_printer_handler(inotify: &mut Inotify, printer: &Printer) {
 
             match &msg_result {
                 Ok(msg_ok) => {
-                    printer.move_message(printer::PrintStatus::Ok, &path_string, msg_ok);
+                    let print_result = printer.print_file(&msg_ok);
+                    if let Err(error_msg) = print_result {
+                        let mut msg = msg_ok.clone();
+                        msg.set_error(error_msg);
+                        printer.update_message(&path_string, &msg);
+                        printer.move_message(printer::PrintStatus::Error, &path_string);
+                    }
+
+                    let mut msg = msg_ok.clone();
+                    msg.set_successful();
+                    printer.update_message(&path_string, &msg);
+                    printer.move_message(printer::PrintStatus::Ok, &path_string);
                 }
                 Err(msg_error) => {
-                    printer.move_message(printer::PrintStatus::Error, &path_string, msg_error);
+                    let msg = msg_error.clone();
+                    printer.update_message(&path_string, &msg);
+                    printer.move_message(printer::PrintStatus::Error, &path_string);
                 }
             }
         }

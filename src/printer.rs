@@ -22,8 +22,7 @@ pub struct Printer {
 #[derive(Debug)]
 pub enum PrintStatus {
     Ok,
-    Error,
-    Pending,
+    Error
 }
 
 impl Printer {
@@ -60,30 +59,26 @@ impl Printer {
         info!("try parse string");
         info!("{}", json_string_file.as_str());
 
-        let msg = match message_result {
+        match message_result {
             Ok(msg) => {
                 info!("message parsed");
                 info!("{:?}", path_file);
-                msg
+                Ok(msg)
             }
             Err(x) => {
                 error!("Error parsing message: {:?}", x.to_string());
-                panic!()
+                let msg = Message {
+                    error: Some(x.to_string()),
+                    is_valid: false,
+                    pdf_url: "".to_string(),
+                    printed_at: None,
+                };
+                Err(msg)
             }
-        };
-
-        match msg.clone().is_valid() {
-            Ok(()) => Ok(msg),
-            Err(msg_with_error) => Err(msg_with_error),
         }
     }
 
-    pub fn move_message(
-        self,
-        status: PrintStatus,
-        file_path: &String,
-        message: &Message,
-    ) -> Result<(), Message> {
+    pub fn move_message(&self, status: PrintStatus, file_path: &String) {
         let path_from = path::Path::new(&self.app_config.work_dir_name)
             .join("pending".to_string())
             .join(file_path.to_string());
@@ -98,7 +93,7 @@ impl Printer {
             info!("Moved from {} to {}", from, to);
         };
         let log_error = |from: &String, to: &String, err: String| {
-            error!("Moved from {} to {}", from, to);
+            error!("Moved from {} to {}. Error={}", from, to, err);
         };
 
         match status {
@@ -114,7 +109,7 @@ impl Printer {
                     Err(e) => {
                         log_error(
                             &path_from.to_string_lossy().to_string(),
-                            &path_to_ok.to_string_lossy().to_string(),
+                            &path_to_error.to_string_lossy().to_string(),
                             e.to_string(),
                         );
                     }
@@ -126,30 +121,68 @@ impl Printer {
                     Ok(_) => {
                         log_info(
                             &path_from.to_string_lossy().to_string(),
-                            &path_to_ok.to_string_lossy().to_string(),
+                            &path_to_error.to_string_lossy().to_string(),
                         );
                     }
                     Err(e) => {
                         log_error(
                             &path_from.to_string_lossy().to_string(),
-                            &path_to_ok.to_string_lossy().to_string(),
+                            &path_to_error.to_string_lossy().to_string(),
                             e.to_string(),
                         );
                     }
                 }
             }
-            PrintStatus::Pending => {}
-        }
-
-        Ok(())
+        };
     }
 
-    pub fn print_ticket(self, message: Message) {
+    pub fn update_message(&self, file_path: &String, message: &Message) {
+        let path_file: PathBuf = [
+            &self.app_config.work_dir_name,
+            &"pending".to_string(),
+            &file_path,
+        ]
+        .iter()
+        .collect();
+
+        let ser_result = serde_json::to_string_pretty(&message);
+        let out_string = match ser_result {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Error on serializing msg: {}", e);
+                panic!();
+            }
+        };
+
+        let result_write = fs::write(path_file, out_string);
+        match result_write {
+            Ok(_) => {
+                info!("Message serialized successfuly")
+            }
+            Err(e) => {
+                error!("Error on saving json msg: {}", e);
+                panic!();
+            }
+        }
+    }
+
+    pub fn print_file(&self, message: &Message) -> Result<(), String> {
         log::info!("Message printed {:?}", message);
         let executable_path = path::Path::new(&self.app_config.printer_bin);
-        let _result = Command::new(executable_path)
-            .args(self.app_config.printer_args)
+        let command_result = Command::new(executable_path)
+            .args(&self.app_config.printer_args)
             .spawn()
-            .map_err(|err| info!("deu ruim porque {}", err));
+            .map_err(|err| err.to_string());
+
+        match command_result {
+            Ok(_child) => {
+                info!("Command executed successfuly");
+                Ok(())
+            }
+            Err(e) => {
+                info!("Command failed because: {}", e);
+                Err(e)
+            }
+        }
     }
 }

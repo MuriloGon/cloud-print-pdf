@@ -13,27 +13,22 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(pdf_url: String) -> Message {
-        Message {
-            error: None,
-            is_valid: true,
-            printed_at: None,
-            pdf_url,
-        }
+    // pub fn new(pdf_url: String) -> Message {
+    //     Message {
+    //         error: None,
+    //         is_valid: true,
+    //         printed_at: None,
+    //         pdf_url,
+    //     }
+    // }
+
+    pub fn set_error(&mut self, error: String) {
+        self.error = Some(error);
     }
 
-    pub fn is_valid(self) -> Result<(), Message> {
-        match self.validate() {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                let output = e.to_string();
-                return Err(Message {
-                    error: Some(String::from(output)),
-                    is_valid: false,
-                    ..self
-                });
-            }
-        }
+    pub fn set_successful(&mut self) {
+        self.is_valid = true;
+        self.printed_at = Some(chrono::Utc::now());
     }
 }
 
