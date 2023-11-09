@@ -5,7 +5,8 @@
   "printer_args": [
     "hello world"
   ],
-  "websocket_url": "wss://socketsbay.com/wss/v2/2/demo/",
-  "context_id": "eventId",
-  "context_name": "events-prd"
+  "ws_url": "",
+  "ws_context_id": "6537f30ef99e723175191d01",
+  "ws_context_name": "cloud-print",
+  "ws_context_pwd": ""
 }

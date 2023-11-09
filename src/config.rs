@@ -16,9 +16,10 @@ pub struct AppConfigFromFile {
     pub work_dir_name: Option<String>,
     pub printer_bin: Option<String>,
     pub printer_args: Option<Vec<String>>,
-    pub websocket_url: Option<String>,
-    pub context_id: Option<String>,
-    pub context_name: Option<String>,
+    pub ws_url: Option<String>,
+    pub ws_context_id: Option<String>,
+    pub ws_context_name: Option<String>,
+    pub ws_context_pwd: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -28,9 +29,10 @@ pub struct AppConfig {
     pub work_dir_name: String,
     pub printer_bin: String,
     pub printer_args: Vec<String>,
-    pub websocket_url: String,
-    pub context_id: String,
-    pub context_name: String,
+    pub ws_url: String,
+    pub ws_context_id: String,
+    pub ws_context_name: String,
+    pub ws_context_pwd: String,
 }
 
 impl Default for AppConfig {
@@ -41,9 +43,10 @@ impl Default for AppConfig {
             work_dir_name: "wdir".to_string(),
             printer_bin: "cat".to_string(),
             printer_args: vec![],
-            websocket_url: String::new(),
-            context_id: String::new(),
-            context_name: String::new(),
+            ws_url: String::new(),
+            ws_context_id: String::new(),
+            ws_context_name: String::new(),
+            ws_context_pwd: String::new(),
         }
     }
 }
@@ -133,18 +136,22 @@ impl AppConfig {
                     .work_dir_name
                     .or(Some(default_config.work_dir_name))
                     .unwrap(),
-                context_id: v.context_id.or(Some(default_config.context_id)).unwrap(),
-                context_name: v
-                    .context_name
-                    .or(Some(default_config.context_name))
-                    .unwrap(),
+                ws_url: v.ws_url.or(Some(default_config.ws_url)).unwrap(),
                 printer_args: v
                     .printer_args
                     .or(Some(default_config.printer_args))
                     .unwrap(),
-                websocket_url: v
-                    .websocket_url
-                    .or(Some(default_config.websocket_url))
+                ws_context_id: v
+                    .ws_context_id
+                    .or(Some(default_config.ws_context_id))
+                    .unwrap(),
+                ws_context_name: v
+                    .ws_context_name
+                    .or(Some(default_config.ws_context_name))
+                    .unwrap(),
+                ws_context_pwd: v
+                    .ws_context_pwd
+                    .or(Some(default_config.ws_context_pwd))
                     .unwrap(),
             },
             None => default_config,
