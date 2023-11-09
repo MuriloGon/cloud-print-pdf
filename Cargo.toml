@@ -1,5 +1,5 @@
 [package]
-name = "print-client"
+name = "cloud-print"
 version = "0.1.0"
 edition = "2021"
 
