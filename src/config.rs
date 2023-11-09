@@ -7,7 +7,7 @@ pub enum FileSupported {
     YAML,
 }
 
-use log::{info, warn, error};
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,7 +34,7 @@ impl Default for AppConfig {
             root_path: ".".to_string(),
             work_dir_name: "wdir".to_string(),
             printer_bin: "cat".to_string(),
-            printer_args: vec![]
+            printer_args: vec![],
         }
     }
 }
