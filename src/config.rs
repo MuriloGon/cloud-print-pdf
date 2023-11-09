@@ -16,6 +16,9 @@ pub struct AppConfigFromFile {
     pub work_dir_name: Option<String>,
     pub printer_bin: Option<String>,
     pub printer_args: Option<Vec<String>>,
+    pub websocket_url: Option<String>,
+    pub context_id: Option<String>,
+    pub context_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -25,6 +28,9 @@ pub struct AppConfig {
     pub work_dir_name: String,
     pub printer_bin: String,
     pub printer_args: Vec<String>,
+    pub websocket_url: String,
+    pub context_id: String,
+    pub context_name: String,
 }
 
 impl Default for AppConfig {
@@ -35,6 +41,9 @@ impl Default for AppConfig {
             work_dir_name: "wdir".to_string(),
             printer_bin: "cat".to_string(),
             printer_args: vec![],
+            websocket_url: String::new(),
+            context_id: String::new(),
+            context_name: String::new(),
         }
     }
 }
@@ -117,13 +126,26 @@ impl AppConfig {
 
         let output = match config_file {
             Some(v) => AppConfig {
+                config_file_name: Self::default().config_file_name,
                 root_path: v.root_path.or(Some(default_config.root_path)).unwrap(),
                 printer_bin: v.printer_bin.or(Some(default_config.printer_bin)).unwrap(),
                 work_dir_name: v
                     .work_dir_name
                     .or(Some(default_config.work_dir_name))
                     .unwrap(),
-                ..Default::default()
+                context_id: v.context_id.or(Some(default_config.context_id)).unwrap(),
+                context_name: v
+                    .context_name
+                    .or(Some(default_config.context_name))
+                    .unwrap(),
+                printer_args: v
+                    .printer_args
+                    .or(Some(default_config.printer_args))
+                    .unwrap(),
+                websocket_url: v
+                    .websocket_url
+                    .or(Some(default_config.websocket_url))
+                    .unwrap(),
             },
             None => default_config,
         };
