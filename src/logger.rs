@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-pub fn setup_logger() -> Result<(), fern::InitError> {
+pub fn setup_logger(output_file: String) -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -12,7 +12,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
         })
         .level(log::LevelFilter::Debug)
         .chain(std::io::stdout())
-        .chain(fern::log_file("output.log")?)
+        .chain(fern::log_file(output_file)?)
         .apply()?;
     Ok(())
 }
