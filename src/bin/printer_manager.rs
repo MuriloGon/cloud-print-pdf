@@ -1,8 +1,13 @@
 use std::path::{self, Path, PathBuf};
 
-use cloud_print::{logger, config::AppConfig, printer::{self, Printer}};
+use cloud_print::{
+    config::AppConfig,
+    dirs::Dirs,
+    logger,
+    printer::{self, Printer},
+};
 use log::info;
-use notify::{RecommendedWatcher, Config, Watcher, RecursiveMode};
+use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::setup_logger()?;
@@ -15,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .join("pending");
 
     // Init dirs
-    init_directories(&app_config);
+    Dirs::generate_working_dir(&app_config);
 
     // Notification that list all directory change on {workdir}/pending
     if let Err(error) = watch(listen_dir_path, &printer) {
@@ -23,10 +28,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
-}
-
-fn init_directories(config: &AppConfig) {
-    AppConfig::generate_working_dir(config)
 }
 
 fn watch<P: AsRef<Path>>(path: P, printer: &Printer) -> notify::Result<()> {

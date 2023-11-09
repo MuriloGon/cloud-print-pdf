@@ -46,7 +46,7 @@ impl Printer {
         let mut f = loop {
             match File::open(&path_file) {
                 Ok(file) => break file,
-                
+
                 // If the file is busy try again until be able to open the file.
                 // TODO: Possible infinite loop, maybe make sense se a counter
                 Err(e) => match e.raw_os_error() {

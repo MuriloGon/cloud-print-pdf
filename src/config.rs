@@ -1,4 +1,4 @@
-use std::{fs, path};
+use std::path;
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum FileSupported {
@@ -7,7 +7,7 @@ pub enum FileSupported {
     YAML,
 }
 
-use log::{error, info, warn};
+use log::error;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -40,21 +40,21 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
-    // pub fn generate_config_file() {
-    //     let default_config = AppConfig::default();
+    pub fn generate_config_file() {
+        let default_config = AppConfig::default();
 
-    //     let yaml_string = serde_yaml::to_string(&default_config).unwrap();
-    //     let json_string = serde_json::to_string_pretty(&default_config).unwrap();
-    //     let filename = default_config.config_file_name;
+        let yaml_string = serde_yaml::to_string(&default_config).unwrap();
+        let json_string = serde_json::to_string_pretty(&default_config).unwrap();
+        let filename = default_config.config_file_name;
 
-    //     if let Err(e) = std::fs::write(format!("{}.yaml", filename), yaml_string) {
-    //         log::error!("Erro ao gerar yaml config: {}", e);
-    //     }
+        if let Err(e) = std::fs::write(format!("{}.yaml", filename), yaml_string) {
+            log::error!("Erro ao gerar yaml config: {}", e);
+        }
 
-    //     if let Err(e) = std::fs::write(format!("{}.json", filename), json_string) {
-    //         log::error!("Erro ao gerar json config: {}", e);
-    //     }
-    // }
+        if let Err(e) = std::fs::write(format!("{}.json", filename), json_string) {
+            log::error!("Erro ao gerar json config: {}", e);
+        }
+    }
 
     pub fn from_config_file() -> AppConfig {
         let default_config = AppConfig::default();
@@ -130,29 +130,5 @@ impl AppConfig {
 
         log::info!("Configuração carregada \n{:?}", &output);
         output
-    }
-
-    pub fn generate_working_dir(config: &AppConfig) {
-        let pending_path = path::Path::new(config.root_path.as_str())
-            .join(config.work_dir_name.as_str())
-            .join("pending");
-        let error_path = path::Path::new(config.root_path.as_str())
-            .join(config.work_dir_name.as_str())
-            .join("error");
-        let ok_path = path::Path::new(config.root_path.as_str())
-            .join(config.work_dir_name.as_str())
-            .join("ok");
-        for path in [pending_path, error_path, ok_path] {
-            let path_str = path.to_string_lossy();
-            info!("Criando \"{}\"", path_str);
-            match fs::create_dir_all(path.as_path()) {
-                Ok(()) => {
-                    info!("\"{}\" adicionado", path_str);
-                }
-                Err(_e) => {
-                    warn!("Erro ao criar diretório \"{}\"", path_str);
-                }
-            }
-        }
     }
 }
