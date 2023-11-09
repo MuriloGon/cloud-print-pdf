@@ -1,15 +1,8 @@
-mod config;
-mod logger;
-mod message;
-mod printer;
-
-use config::AppConfig;
-use log::info;
-use path_abs::PathInfo;
-use printer::Printer;
-
-use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::{self, Path, PathBuf};
+
+use cloud_print::{logger, config::AppConfig, printer::{self, Printer}};
+use log::info;
+use notify::{RecommendedWatcher, Config, Watcher, RecursiveMode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::setup_logger()?;
