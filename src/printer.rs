@@ -1,8 +1,10 @@
 use std::{
-    fs,
+    fs::{self, File},
     path::{self, PathBuf},
     process::Command,
 };
+
+use std::io::Read;
 
 use log::{error, info};
 
@@ -22,7 +24,7 @@ pub struct Printer {
 #[derive(Debug)]
 pub enum PrintStatus {
     Ok,
-    Error
+    Error,
 }
 
 impl Printer {
@@ -41,17 +43,31 @@ impl Printer {
         .iter()
         .collect();
 
-        let json_string_file = match std::fs::read_to_string(&path_file) {
-            Ok(x) => {
-                info!("message imported for path={}", x);
-                info!("\n{:?}", path_file);
-                x
-            }
-            Err(x) => {
-                error!("Error parsing pending json: {:?}", x);
-                panic!()
+        let mut f = loop {
+            match File::open(&path_file) {
+                Ok(file) => break file,
+                
+                // If the file is busy try again until be able to open the file.
+                // TODO: Possible infinite loop, maybe make sense se a counter
+                Err(e) => match e.raw_os_error() {
+                    Some(32) => continue,
+                    _ => {
+                        panic!("unexpected file open error {:?}", e);
+                    }
+                },
+            };
+        };
+
+        let mut data = vec![];
+        match f.read_to_end(&mut data) {
+            Ok(_v) => {}
+            Err(er) => {
+                info!("reading to the end: {:?}", er);
+                panic!();
             }
         };
+
+        let json_string_file = String::from_utf8(data).unwrap();
 
         let message_result: Result<Message, serde_json::Error> =
             serde_json::from_str(json_string_file.as_str());
