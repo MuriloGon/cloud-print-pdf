@@ -1,10 +1,12 @@
-use std::path::{self, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 use cloud_print::{
     config::AppConfig,
     dirs::Dirs,
     logger,
-    printer::{self, Printer},
+    message::Message,
+    message_manager::{FileType, MessageManager},
+    printer_manager::PrinterManager,
 };
 use log::info;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
@@ -13,25 +15,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::setup_logger(String::from("printer_man.log"))?;
 
     let app_config = AppConfig::from_config_file();
-    let printer = printer::Printer::new(&app_config);
+    let printer = PrinterManager::new(&app_config);
 
     // Init dirs
     Dirs::generate_working_dir(&app_config);
 
-    let listed_dir_path = path::Path::new(&app_config.root_path)
+    let listed_dir_path = Path::new(&app_config.root_path)
         .join(&app_config.work_dir_name)
         .join("pending");
 
-
     // Notification that list all directory change on {workdir}/pending
-    if let Err(error) = watch(listed_dir_path, &printer) {
+    if let Err(error) = watch(listed_dir_path, &printer, app_config) {
         log::error!("Error: {error:?}");
     }
 
     Ok(())
 }
 
-fn watch<P: AsRef<Path>>(path: P, printer: &Printer) -> notify::Result<()> {
+fn watch<P: AsRef<Path>>(
+    path: P,
+    printer: &PrinterManager,
+    app_config: AppConfig,
+) -> notify::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
     let mut watcher = RecommendedWatcher::new(tx, Config::default())?;
     watcher.watch(path.as_ref(), RecursiveMode::NonRecursive)?;
@@ -46,7 +51,7 @@ fn watch<P: AsRef<Path>>(path: P, printer: &Printer) -> notify::Result<()> {
                         path.to_string_lossy()
                     );
                     let meupath = path.file_name().unwrap().to_str().unwrap().to_string();
-                    handle_print(&printer, &meupath);
+                    handle_print(printer, meupath, app_config.clone());
                 }
             }
             Err(error) => log::error!("Error: {error:?}"),
@@ -55,30 +60,30 @@ fn watch<P: AsRef<Path>>(path: P, printer: &Printer) -> notify::Result<()> {
     Ok(())
 }
 
-fn handle_print(printer: &Printer, file_name: &String) {
-    let printer = printer.clone();
-    let path_string = file_name;
-    let msg_result = printer.import_message(&path_string);
+fn handle_print(printer: &PrinterManager, file_name: String, app_config: AppConfig) {
+    let printer_manager = printer.clone();
+    let msg_manager = MessageManager::new(&app_config);
+    let msg_result = Message::import_with_path(&file_name, app_config);
     match &msg_result {
         Ok(msg_ok) => {
-            let print_result = printer.print_file(&msg_ok);
+            let print_result = printer_manager.print_file(&msg_ok);
             if let Err(error_msg) = print_result {
                 let mut msg = msg_ok.clone();
                 msg.set_error(error_msg);
-                printer.update_message(&path_string, &msg);
-                printer.move_message(printer::PrintStatus::Error, &path_string);
+                msg_manager.update_message(&file_name, &msg);
+                msg_manager.move_message(FileType::Error, &file_name);
                 return;
             }
             let mut msg = msg_ok.clone();
             msg.set_successful();
-            printer.update_message(&path_string, &msg);
-            printer.move_message(printer::PrintStatus::Ok, &path_string);
+            msg_manager.update_message(&file_name, &msg);
+            msg_manager.move_message(FileType::Ok, &file_name);
             return;
         }
         Err(msg_error) => {
             let msg = msg_error.clone();
-            printer.update_message(&path_string, &msg);
-            printer.move_message(printer::PrintStatus::Error, &path_string);
+            msg_manager.update_message(&file_name, &msg);
+            msg_manager.move_message(FileType::Error, &file_name);
             return;
         }
     }
