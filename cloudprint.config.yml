@@ -1,0 +1,14 @@
+# Path to SumatraPDF executable
+printer_bin: echo
+# Printer name that is showed on windows options in ctrl+p
+printer_name: "Printer Name"
+# SumatraPDF printer settings
+printer_settings: portrait,fit
+# Websocket connection listening to {pdf_url: "url_here"} messages
+ws_url: --
+# Unique context identifier (evntid)
+ws_context_id: --
+# What types of messages the ws connection will be listening (authentication/routing)
+ws_context_name: cloud-print
+# Websocket password (authentication)
+ws_context_pwd: --
