@@ -1,4 +1,4 @@
-use std::path;
+use std::{fmt::Display, path};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum FileSupported {
@@ -10,39 +10,38 @@ pub enum FileSupported {
 use log::error;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AppConfigFromFile {
-    pub root_path: Option<String>,
-    pub work_dir_name: Option<String>,
-    pub printer_bin: Option<String>,
-    pub printer_args: Option<Vec<String>>,
-    pub ws_url: Option<String>,
-    pub ws_context_id: Option<String>,
-    pub ws_context_name: Option<String>,
-    pub ws_context_pwd: Option<String>,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AppConfig {
+    #[serde(skip)]
     config_file_name: String,
+    #[serde(skip)]
     pub root_path: String,
+    #[serde(skip)]
     pub work_dir_name: String,
     pub printer_bin: String,
-    pub printer_args: Vec<String>,
+    pub printer_name: String,
+    pub printer_settings: String,
     pub ws_url: String,
     pub ws_context_id: String,
     pub ws_context_name: String,
     pub ws_context_pwd: String,
 }
 
+impl Display for AppConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "AppConfig{{\n  config_file_name: {:?},\n  root_path: {:?},\n  work_dir_name: {:?},\n  printer_bin: {:?},\n  printer_name: {:?},\n  printer_settings: {:?},\n  ws_url: {:?},\n  ws_context_id: {:?},\n  ws_context_name: {:?},\n  ws_context_pwd: {:?}\n}}", self.config_file_name, self.root_path, self.work_dir_name, self.printer_bin, self.printer_name, self.printer_settings, self.ws_url, self.ws_context_id, self.ws_context_name, self.ws_context_pwd)
+    }
+}
+
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            config_file_name: "printclient.config".to_string(),
+            config_file_name: "cloudprint.config".to_string(),
             root_path: ".".to_string(),
             work_dir_name: "wdir".to_string(),
-            printer_bin: "cat".to_string(),
-            printer_args: vec![],
+            printer_bin: "echo".to_string(),
+            printer_name: "".to_string(),
+            printer_settings: "".to_string(),
             ws_url: String::new(),
             ws_context_id: String::new(),
             ws_context_name: String::new(),
@@ -76,7 +75,7 @@ impl AppConfig {
         extensions.insert(FileSupported::YAML, "yaml");
         extensions.insert(FileSupported::YML, "yml");
 
-        let mut config_file: Option<AppConfigFromFile> = None;
+        let mut config_file: Option<AppConfig> = None;
 
         for extension_name in [FileSupported::JSON, FileSupported::YML, FileSupported::YAML] {
             let extension_value = extensions.get(&extension_name).unwrap();
@@ -84,12 +83,13 @@ impl AppConfig {
                 "{}.{}",
                 default_config.config_file_name, extension_value
             ));
+            println!("{:?}", file_path);
 
             let read_file_result = std::fs::read_to_string(file_path);
             let string_input = match read_file_result {
                 Err(e) => {
                     error!("{}", e);
-                    panic!();
+                    continue;
                 }
                 Ok(x) => x,
             };
@@ -98,7 +98,7 @@ impl AppConfig {
                 FileSupported::JSON => {
                     log::info!("Configuration file .{} found", extension_value);
                     log::info!("\n{}", &string_input);
-                    let output: Result<AppConfigFromFile, serde_json::Error> =
+                    let output: Result<AppConfig, serde_json::Error> =
                         serde_json::from_str(string_input.as_str());
                     match output {
                         Ok(x) => Some(x),
@@ -111,7 +111,7 @@ impl AppConfig {
                 FileSupported::YAML | FileSupported::YML => {
                     log::info!("Configuration file .{} found", extension_value);
                     log::info!("\n{}", string_input);
-                    let output: Result<AppConfigFromFile, serde_yaml::Error> =
+                    let output: Result<AppConfig, serde_yaml::Error> =
                         serde_yaml::from_str(string_input.as_str());
                     match output {
                         Ok(x) => Some(x),
@@ -126,36 +126,19 @@ impl AppConfig {
         }
 
         let output = match config_file {
-            Some(v) => AppConfig {
-                config_file_name: Self::default().config_file_name,
-                root_path: v.root_path.or(Some(default_config.root_path)).unwrap(),
-                printer_bin: v.printer_bin.or(Some(default_config.printer_bin)).unwrap(),
-                work_dir_name: v
-                    .work_dir_name
-                    .or(Some(default_config.work_dir_name))
-                    .unwrap(),
-                ws_url: v.ws_url.or(Some(default_config.ws_url)).unwrap(),
-                printer_args: v
-                    .printer_args
-                    .or(Some(default_config.printer_args))
-                    .unwrap(),
-                ws_context_id: v
-                    .ws_context_id
-                    .or(Some(default_config.ws_context_id))
-                    .unwrap(),
-                ws_context_name: v
-                    .ws_context_name
-                    .or(Some(default_config.ws_context_name))
-                    .unwrap(),
-                ws_context_pwd: v
-                    .ws_context_pwd
-                    .or(Some(default_config.ws_context_pwd))
-                    .unwrap(),
-            },
-            None => default_config,
+            Some(mut v) => {
+                v.root_path = Self::default().root_path;
+                v.config_file_name = Self::default().config_file_name;
+                v.work_dir_name = Self::default().work_dir_name;
+                v
+            }
+            None => {
+                error!("Config file (print.config.(js|yml|yaml)) does not exist and must be created before initialize application");
+                panic!()
+            }
         };
 
-        log::info!("App Configuration loaded \n{:?}", &output);
+        log::info!("App Configuration loaded \n{:}", &output);
         output
     }
 }
