@@ -48,6 +48,10 @@ impl Message {
         self.printed_at = Some(chrono::Utc::now());
     }
 
+    pub fn set_downloaded_file_path(&mut self, pdf_path: String) {
+        self.pdf_local_path = Some(pdf_path);
+    }
+
     pub fn merge(self, new_msg: Message) -> Message {
         Message {
             id: self.id,
