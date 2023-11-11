@@ -60,11 +60,11 @@ impl AppConfig {
         let filename = default_config.config_file_name;
 
         if let Err(e) = std::fs::write(format!("{}.yaml", filename), yaml_string) {
-            log::error!("Erro ao gerar yaml config: {}", e);
+            log::error!("Error generating .yaml config: {}", e);
         }
 
         if let Err(e) = std::fs::write(format!("{}.json", filename), json_string) {
-            log::error!("Erro ao gerar json config: {}", e);
+            log::error!("Error generating .json config: {}", e);
         }
     }
 
@@ -96,29 +96,27 @@ impl AppConfig {
 
             config_file = match extension_name {
                 FileSupported::JSON => {
-                    log::info!("Arquivo de configuracao .{} encontrado", extension_value);
+                    log::info!("Configuration file .{} found", extension_value);
                     log::info!("\n{}", &string_input);
                     let output: Result<AppConfigFromFile, serde_json::Error> =
                         serde_json::from_str(string_input.as_str());
                     match output {
                         Ok(x) => Some(x),
                         Err(e) => {
-                            log::error!("Erro ao importar arquivo json");
-                            log::error!("{}", e);
+                            log::error!("Error importing .json file. Input:\n{}", e);
                             panic!();
                         }
                     }
                 }
                 FileSupported::YAML | FileSupported::YML => {
-                    log::info!("Arquivo de configuracao .{} encontrado", extension_value);
+                    log::info!("Configuration file .{} found", extension_value);
                     log::info!("\n{}", string_input);
                     let output: Result<AppConfigFromFile, serde_yaml::Error> =
                         serde_yaml::from_str(string_input.as_str());
                     match output {
                         Ok(x) => Some(x),
                         Err(e) => {
-                            log::error!("erro ao importar arquivo yml");
-                            log::error!("{}", e);
+                            log::error!("Error importing .json file. Input:\n{}", e);
                             panic!();
                         }
                     }
@@ -157,7 +155,7 @@ impl AppConfig {
             None => default_config,
         };
 
-        log::info!("Configuração carregada \n{:?}", &output);
+        log::info!("App Configuration loaded \n{:?}", &output);
         output
     }
 }

@@ -18,15 +18,18 @@ impl Dirs {
         let ok_path = path::Path::new(config.root_path.as_str())
             .join(config.work_dir_name.as_str())
             .join("ok");
-        for path in [pending_path, error_path, ok_path] {
+        let pdfs_path = path::Path::new(config.root_path.as_str())
+            .join(config.work_dir_name.as_str())
+            .join("pdfs");
+        for path in [pending_path, error_path, ok_path, pdfs_path] {
             let path_str = path.to_string_lossy();
-            info!("Criando \"{}\"", path_str);
+            info!("Creating dir \"{}\"", path_str);
             match fs::create_dir_all(path.as_path()) {
                 Ok(()) => {
-                    info!("\"{}\" adicionado", path_str);
+                    info!("\"{}\" added", path_str);
                 }
                 Err(_e) => {
-                    warn!("Erro ao criar diretório \"{}\"", path_str);
+                    warn!("Error on creating dir \"{}\"", path_str);
                 }
             }
         }

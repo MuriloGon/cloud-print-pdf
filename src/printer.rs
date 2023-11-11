@@ -7,6 +7,7 @@ use std::{
 use std::io::Read;
 
 use log::{error, info};
+use serde_json::json;
 
 use crate::{config::AppConfig, message::Message};
 
@@ -52,7 +53,7 @@ impl Printer {
                 Err(e) => match e.raw_os_error() {
                     Some(32) => continue,
                     _ => {
-                        panic!("unexpected file open error {:?}", e);
+                        panic!("Unexpected file open error {:?}", e);
                     }
                 },
             };
@@ -62,7 +63,7 @@ impl Printer {
         match f.read_to_end(&mut data) {
             Ok(_v) => {}
             Err(er) => {
-                info!("reading to the end: {:?}", er);
+                info!("Error reading to the end: {:?}", er);
                 panic!();
             }
         };
@@ -72,22 +73,29 @@ impl Printer {
         let message_result: Result<Message, serde_json::Error> =
             serde_json::from_str(json_string_file.as_str());
 
-        info!("try parse string");
-        info!("{}", json_string_file.as_str());
+        info!("Trying parse string:\n{}", json_string_file.as_str());
 
         match message_result {
             Ok(msg) => {
-                info!("message parsed");
+                info!("Message parsed");
                 info!("{:?}", path_file);
                 Ok(msg)
             }
             Err(x) => {
                 error!("Error parsing message: {:?}", x.to_string());
+
+                let custom_error_msg = json!({
+                  "message": x.to_string(),
+                  "payload": json_string_file
+                }).to_string();
+
                 let msg = Message {
-                    error: Some(x.to_string()),
-                    is_valid: false,
-                    pdf_url: "".to_string(),
+                    error: Some(custom_error_msg),
+                    is_valid: None,
+                    pdf_url: "Invalid URL".to_string(),
                     printed_at: None,
+                    pdf_local_path: None,
+                    context: None
                 };
                 Err(msg)
             }
@@ -186,7 +194,7 @@ impl Printer {
         log::info!("Message printed {:?}", message);
         let executable_path = path::Path::new(&self.app_config.printer_bin);
         let command_result = Command::new(executable_path)
-            .args(&self.app_config.printer_args)
+            .args(&self.app_config.printer_args )
             .spawn()
             .map_err(|err| err.to_string());
 

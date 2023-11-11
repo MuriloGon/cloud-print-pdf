@@ -15,15 +15,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_config = AppConfig::from_config_file();
     let printer = printer::Printer::new(&app_config);
 
-    let listen_dir_path = path::Path::new(&app_config.root_path)
-        .join(&app_config.work_dir_name)
-        .join("pending");
-
     // Init dirs
     Dirs::generate_working_dir(&app_config);
 
+    let listed_dir_path = path::Path::new(&app_config.root_path)
+        .join(&app_config.work_dir_name)
+        .join("pending");
+
+
     // Notification that list all directory change on {workdir}/pending
-    if let Err(error) = watch(listen_dir_path, &printer) {
+    if let Err(error) = watch(listed_dir_path, &printer) {
         log::error!("Error: {error:?}");
     }
 
@@ -40,7 +41,7 @@ fn watch<P: AsRef<Path>>(path: P, printer: &Printer) -> notify::Result<()> {
                 if event.kind.is_create() {
                     let path: PathBuf = event.paths.iter().collect();
                     info!(
-                        "New file add to pending. eventType={:?}, path={}",
+                        "New file added to pending.\n-eventType={:?}\n-path={}",
                         event.kind,
                         path.to_string_lossy()
                     );
