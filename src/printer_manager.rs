@@ -1,4 +1,4 @@
-use std::{process::Command, path::Path};
+use std::{path::Path, process::Command};
 
 use log::info;
 
@@ -23,10 +23,21 @@ impl PrinterManager {
     }
 
     pub fn print_file(&self, message: &Message) -> Result<(), String> {
-        log::info!("Message printed {:?}", message);
+        log::info!("Message used on current print: \n{}", message);
+
         let executable_path = Path::new(&self.app_config.printer_bin);
+        let mut args: Vec<String> = Vec::new();
+        args.push(String::from("-print-to"));
+        args.push(String::from(&self.app_config.printer_name));
+        args.push(String::from("-print-settings"));
+        args.push(String::from(&self.app_config.printer_settings));
+        args.push(message.pdf_local_path.clone().unwrap());
+
+        let command_executed = format!("{} {}", &executable_path.to_string_lossy(), args.join(" "));
+        info!("Command that will be executed:\n\"{}\"", command_executed);
+
         let command_result = Command::new(executable_path)
-            .args(&self.app_config.printer_args)
+            .args(&args)
             .spawn()
             .map_err(|err| err.to_string());
 

@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::PathBuf};
+use std::{fmt::Display, fs::File, io::Read, path::PathBuf};
 
 use chrono::{DateTime, Utc};
 use log::{error, info};
@@ -19,6 +19,12 @@ pub struct Message {
     pub error: Option<String>,
     pub original_body: Option<String>,
     pub context: Option<Value>,
+}
+
+impl Display for Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Message{{\n  id: {:?},\n  pdf_url: {:?},\n  pdf_local_path: {:?},\n  is_valid: {:?},\n  printed_at: {:?},\n  error: {:?},\n  original_body: {:?},\n  context: {:?}\n}}", self.id, self.pdf_url, self.pdf_local_path, self.is_valid, self.printed_at, self.error, self.original_body, self.context)
+    }
 }
 
 impl Default for Message {
