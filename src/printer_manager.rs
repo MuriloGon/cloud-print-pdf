@@ -1,4 +1,4 @@
-use std::{path::Path, process::Command, fmt::format};
+use std::{path::Path, process::Command};
 
 use log::info;
 
