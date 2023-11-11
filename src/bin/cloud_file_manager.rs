@@ -4,7 +4,7 @@ use std::{error::Error, fs, path::Path};
 use websocket::ClientBuilder;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let _ = logger::setup_logger(String::from("cloud_file_man.log"));
+    let _ = logger::setup_logger(String::from("cloud_file_manager.log"));
 
     let app_config = AppConfig::from_config_file();
     let msg_manager = MessageManager::new(&app_config);

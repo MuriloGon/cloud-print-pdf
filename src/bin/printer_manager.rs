@@ -12,7 +12,7 @@ use log::info;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    logger::setup_logger(String::from("printer_man.log"))?;
+    logger::setup_logger(String::from("printer_manager.log"))?;
 
     let app_config = AppConfig::from_config_file();
     let printer = PrinterManager::new(&app_config);
