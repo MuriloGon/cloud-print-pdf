@@ -48,8 +48,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             msg_manager.save_error_message(&file_name, &error_msg);
         };
 
-    for message in client.incoming_messages() {
-        let msg_opt: Option<String> = match message.unwrap() {
+    for message_result in client.incoming_messages() {
+        let message = match message_result {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Websocket error: {:?}", e);
+                continue;
+            }
+        };
+
+        let msg_opt: Option<String> = match message {
             websocket::OwnedMessage::Text(t) => Some(t),
             _ => None,
         };
