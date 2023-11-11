@@ -17,6 +17,7 @@ pub struct Message {
     pub is_valid: Option<bool>,
     pub printed_at: Option<DateTime<Utc>>,
     pub error: Option<String>,
+    pub original_body: Option<String>,
     pub context: Option<Value>,
 }
 
@@ -30,14 +31,16 @@ impl Default for Message {
             printed_at: None,
             error: None,
             context: None,
+            original_body: None,
         }
     }
 }
 
 impl Message {
-    pub fn set_error(&mut self, error: String) {
+    pub fn set_error(&mut self, error: String, original_body: Option<String>) {
         self.is_valid = Some(false);
         self.error = Some(error);
+        self.original_body = original_body;
     }
 
     pub fn set_successful(&mut self) {
@@ -54,6 +57,7 @@ impl Message {
             printed_at: self.printed_at.or(new_msg.printed_at),
             error: self.error.or(new_msg.error),
             context: self.context.or(new_msg.context),
+            original_body: self.original_body.or(new_msg.original_body),
         }
     }
 

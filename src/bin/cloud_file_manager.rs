@@ -1,12 +1,13 @@
-use cloud_print::{logger, message::Message};
+use cloud_print::{config::AppConfig, logger, message::Message, message_manager::MessageManager};
 use log::{error, info};
-use std::{error::Error, fs, path};
+use std::{error::Error, fs, path::Path};
 use websocket::ClientBuilder;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let _ = logger::setup_logger(String::from("cloud_file_man.log"));
 
-    let app_config = cloud_print::config::AppConfig::from_config_file();
+    let app_config = AppConfig::from_config_file();
+    let msg_manager = MessageManager::new(&app_config);
     let ws_url = format!(
         "{}?eventId={}&context={}&pwd={}",
         &app_config.ws_url,
@@ -49,14 +50,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             let msg = match msg_result {
                 Ok(v) => v,
                 Err(e) => {
-                  error!("Error parsing ws Message: {:?}", e);
-                  let mut error_msg = Message::default();
-                  error_msg.set_error(e.to_string());
-                  break;
-                },
+                    error!("Error parsing ws Message: {:?}", e);
+                    let mut error_msg = Message::default();
+                    error_msg.set_error(e.to_string(), Some(msg_string));
+
+                    let file_name = format!("{}.json", &error_msg.id.clone().unwrap());
+                    msg_manager.save_error_message(&file_name, &error_msg);
+                    continue;
+                }
             };
 
-            let file_name = path::Path::new("wdir")
+            let file_name = Path::new("wdir")
                 .join("ok")
                 .join(format!("{}.json", &msg.id.as_ref().unwrap()));
 

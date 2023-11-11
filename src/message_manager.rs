@@ -82,11 +82,41 @@ impl MessageManager {
         };
     }
 
-    pub fn update_message(&self, file_path: &String, message: &Message) {
+    pub fn update_message(&self, file_name: &String, message: &Message) {
         let path_file: PathBuf = [
             &self.app_config.work_dir_name,
             &"pending".to_string(),
-            &file_path,
+            &file_name,
+        ]
+        .iter()
+        .collect();
+
+        let ser_result = serde_json::to_string_pretty(&message);
+        let out_string = match ser_result {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Error on serializing msg: {}", e);
+                panic!();
+            }
+        };
+
+        let result_write = fs::write(path_file, out_string);
+        match result_write {
+            Ok(_) => {
+                info!("Message serialized successfuly")
+            }
+            Err(e) => {
+                error!("Error on saving json msg: {}", e);
+                panic!();
+            }
+        }
+    }
+
+    pub fn save_error_message(&self, file_name: &String, message: &Message) {
+        let path_file: PathBuf = [
+            &self.app_config.work_dir_name,
+            &"error".to_string(),
+            &file_name,
         ]
         .iter()
         .collect();

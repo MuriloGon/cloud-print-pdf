@@ -69,7 +69,7 @@ fn handle_print(printer: &PrinterManager, file_name: String, app_config: AppConf
             let print_result = printer_manager.print_file(&msg_ok);
             if let Err(error_msg) = print_result {
                 let mut msg = msg_ok.clone();
-                msg.set_error(error_msg);
+                msg.set_error(error_msg, None);
                 msg_manager.update_message(&file_name, &msg);
                 msg_manager.move_message(FileType::Error, &file_name);
                 return;
