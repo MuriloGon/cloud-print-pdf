@@ -1,12 +1,16 @@
 use crate::{config::AppConfig, message::Message, message_manager::MessageManager};
 use crate::{message_manager::FileType, printer_manager::PrinterManager};
 use log::{error, info};
-use std::{error::Error, fs, path::Path};
-use std::path::PathBuf;
-use websocket::ClientBuilder;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::{error::Error, fs, path::Path};
+use websocket::ClientBuilder;
 
-pub fn cloud_file_manager(app_config: AppConfig) -> Result<(), Box<dyn Error>> {
+pub fn cloud_file_manager(
+    app_config: AppConfig,
+    should_close_mutex: Option<&Arc<Mutex<bool>>>,
+) -> Result<(), Box<dyn Error>> {
     let msg_manager = MessageManager::new(&app_config);
     let ws_url = format!(
         "{}?eventId={}&context={}&pwd={}",
@@ -49,11 +53,22 @@ pub fn cloud_file_manager(app_config: AppConfig) -> Result<(), Box<dyn Error>> {
         };
 
     for message_result in client.incoming_messages() {
+        if let Some(should_close) = should_close_mutex {
+            let should_close = *should_close.lock().unwrap();
+            info!("[cloud_file_manager] should_close={should_close})");
+            if should_close {
+                info!("[cloud_file_manager] should_close={should_close}. Finishing thread");
+                break;
+            } else {
+                info!("[cloud_file_manager] should_close={should_close}. Not finishing yet");
+            }
+        }
+
         let message = match message_result {
             Ok(v) => v,
             Err(e) => {
                 error!("Websocket error: {:?}", e);
-                continue;
+                panic!("Websocket error: {:?}", e);
             }
         };
 
@@ -165,7 +180,10 @@ pub fn cloud_file_manager(app_config: AppConfig) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn printer_manager(app_config: AppConfig) -> Result<(), Box<dyn std::error::Error>> {
+pub fn printer_manager(
+    app_config: AppConfig,
+    should_close_mutex: Option<&Arc<Mutex<bool>>>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let printer = PrinterManager::new(&app_config);
 
     let listed_dir_path = Path::new(&app_config.root_path)
@@ -173,7 +191,7 @@ pub fn printer_manager(app_config: AppConfig) -> Result<(), Box<dyn std::error::
         .join("pending");
 
     // Notification that list all directory change on {workdir}/pending
-    if let Err(error) = watch(listed_dir_path, &printer, app_config) {
+    if let Err(error) = watch(listed_dir_path, &printer, app_config, should_close_mutex) {
         log::error!("Error: {error:?}");
     }
 
@@ -184,11 +202,23 @@ fn watch<P: AsRef<Path>>(
     path: P,
     printer: &PrinterManager,
     app_config: AppConfig,
+    should_close_mutex: Option<&Arc<Mutex<bool>>>,
 ) -> notify::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
     let mut watcher = RecommendedWatcher::new(tx, Config::default())?;
     watcher.watch(path.as_ref(), RecursiveMode::NonRecursive)?;
     for res in rx {
+        if let Some(should_close) = should_close_mutex {
+            let should_close = *should_close.lock().unwrap();
+            info!("[printer_manager] should_close={should_close})");
+            if should_close {
+                info!("[printer_manager] should_close={should_close}. Finishing thread");
+                break;
+            } else {
+                info!("[printer_manager] should_close={should_close}. Not finishing yet");
+            }
+        }
+
         match res {
             Ok(event) => {
                 if event.kind.is_create() {
