@@ -30,7 +30,7 @@ pub struct AppConfig {
 
 impl Display for AppConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "AppConfig{{\n  config_file_name: {:?},\n  root_path: {:?},\n  work_dir_name: {:?},\n  printer_bin: {:?},\n  printer_name: {:?},\n  printer_settings: {:?},\n  ws_url: {:?},\n  ws_context_id: {:?},\n  ws_context_name: {:?},\n  ws_context_pwd: {:?}\n}}", self.config_file_name, self.root_path, self.work_dir_name, self.printer_bin, self.printer_name, self.printer_settings, self.ws_url, self.ws_context_id, self.ws_context_name, self.ws_context_pwd)
+        write!(f, "AppConfig{{\n  config_file_name: {:?},\n  root_path: {:?},\n  work_dir_name: {:?},\n  printer_bin: {:?},\n  printer_name: {:?},\n  printer_settings: {:?},\n  ws_url: {:?},\n  ws_context_id: {:?},\n  ws_context_name: {:?},\n  ws_context_pwd: {:?},\n  ws_printer_name: {:?}\n}}", self.config_file_name, self.root_path, self.work_dir_name, self.printer_bin, self.printer_name, self.printer_settings, self.ws_url, self.ws_context_id, self.ws_context_name, self.ws_context_pwd, self.ws_printer_name)
     }
 }
 

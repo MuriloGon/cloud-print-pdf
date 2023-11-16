@@ -4,13 +4,13 @@ use log::{error, info};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use std::{error::Error, fs, path::Path};
+use std::{fs, path::Path};
 use websocket::ClientBuilder;
 
 pub fn cloud_file_manager(
     app_config: AppConfig,
     should_close_mutex: Option<&Arc<Mutex<bool>>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let msg_manager = MessageManager::new(&app_config);
     let ws_url = format!(
         "{}?eventId={}&context={}&pwd={}&printerName={}",
@@ -65,21 +65,16 @@ pub fn cloud_file_manager(
             }
         }
 
-        let message = match message_result {
-            Ok(v) => v,
-            Err(e) => {
-                error!("Websocket error: {:?}", e);
-                panic!("Websocket error: {:?}", e);
-            }
-        };
+        let message = message_result?;
 
-        let msg_opt: Option<String> = match message {
-            websocket::OwnedMessage::Text(t) => Some(t),
+        let msg_opt = match message {
+            websocket::OwnedMessage::Text(t) => Ok(Some(t)),
             e => {
                 error!("Websocket Error \n{:?}", e);
-                panic!();
+                let error_message = format!("{:?}", e);
+                Err(error_message)
             }
-        };
+        }?;
 
         if let Some(msg_string) = msg_opt {
             let msg_result: Result<Message, serde_json::Error> =

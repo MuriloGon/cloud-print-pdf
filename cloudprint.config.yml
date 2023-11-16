@@ -1,5 +1,5 @@
 # Path to SumatraPDF executable
-printer_bin: echo
+printer_bin: ./scripts/printe_me.sh
 # Printer name that is showed on windows options in ctrl+p
 printer_name: IMPRESSORA TAL
 # SumatraPDF printer settings
