@@ -1,14 +1,16 @@
 # Path to SumatraPDF executable
 printer_bin: echo
 # Printer name that is showed on windows options in ctrl+p
-printer_name: "Printer Name"
+printer_name: IMPRESSORA TAL
 # SumatraPDF printer settings
 printer_settings: portrait,fit
 # Websocket connection listening to {pdf_url: "url_here"} messages
-ws_url: --
+ws_url: wss://7rdht9d05c.execute-api.us-east-1.amazonaws.com/dev/
 # Unique context identifier (evntid)
-ws_context_id: --
+ws_context_id: 6536bdb4c9c45fee7443e887
 # What types of messages the ws connection will be listening (authentication/routing)
 ws_context_name: cloud-print
 # Websocket password (authentication)
-ws_context_pwd: --
+ws_context_pwd: A8dX174Z7d6
+# Printer label associated with this current client
+ws_printer_name: default

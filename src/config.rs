@@ -25,6 +25,7 @@ pub struct AppConfig {
     pub ws_context_id: String,
     pub ws_context_name: String,
     pub ws_context_pwd: String,
+    pub ws_printer_name: String,
 }
 
 impl Display for AppConfig {
@@ -46,6 +47,7 @@ impl Default for AppConfig {
             ws_context_id: String::new(),
             ws_context_name: String::new(),
             ws_context_pwd: String::new(),
+            ws_printer_name: String::new(),
         }
     }
 }

@@ -13,11 +13,12 @@ pub fn cloud_file_manager(
 ) -> Result<(), Box<dyn Error>> {
     let msg_manager = MessageManager::new(&app_config);
     let ws_url = format!(
-        "{}?eventId={}&context={}&pwd={}",
+        "{}?eventId={}&context={}&pwd={}&printerName={}",
         &app_config.ws_url,
         &app_config.ws_context_id,
         &app_config.ws_context_name,
-        &app_config.ws_context_pwd
+        &app_config.ws_context_pwd,
+        &app_config.ws_printer_name
     );
     info!("Websocket url={}", &ws_url);
 
